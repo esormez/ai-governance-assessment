@@ -21,13 +21,18 @@ export default function NavToggle({ activeMode, onModeChange }) {
         display: "flex", alignItems: "center", gap: 0,
         height: 52,
       }}>
-        <span style={{
-          fontSize: 13, fontWeight: 700, letterSpacing: "0.15em",
-          color: BRAND.accent, textTransform: "uppercase",
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
           marginRight: 32, flexShrink: 0,
         }}>
-          Intralytics
-        </span>
+          <img src="/favicon.png" alt="Intralytics" style={{ width: 22, height: 22 }} />
+          <span style={{
+            fontSize: 13, fontWeight: 700, letterSpacing: "0.15em",
+            color: BRAND.accent, textTransform: "uppercase",
+          }}>
+            Intralytics
+          </span>
+        </div>
         <div style={{
           display: "flex", gap: 2, overflow: "auto",
           msOverflowStyle: "none", scrollbarWidth: "none",
