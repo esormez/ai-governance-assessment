@@ -12,7 +12,7 @@ export const LAYERS = [
     label: "Data Warehouse",
     subtitle: "Snowflake",
     icon: "⬡",
-    summary: "Critical access control gaps with overprivileged service accounts and no row-level security.",
+    summary: "Critical access control gaps with overprivileged service accounts, no row-level security, no prompt retention policy, and unrotated secrets.",
     findings: [
       {
         control: "Row Access Policies",
@@ -48,6 +48,27 @@ export const LAYERS = [
         actual: "AI_SERVICE_ROLE used for all queries regardless of requesting user",
         severity: "red",
         remediation: "Implement session-level identity propagation using Snowflake session variables. Tag every query with the originating user's identity.",
+      },
+      {
+        control: "Prompt & Response Retention Policy",
+        expected: "30-day retention of prompt/response pairs for security, legal, and workplace safety purposes only. No use for analytics, benchmarking, or debugging without explicit approval.",
+        actual: "No prompt retention policy defined — responses are not stored, and no retention window is configured",
+        severity: "red",
+        remediation: "Implement 30-day rolling retention of hashed prompt/response pairs in an immutable store. Restrict access to security, privacy, and legal teams only. Prohibit use for application analytics, benchmarking, troubleshooting, or debugging without explicit security/privacy/legal sign-off.",
+      },
+      {
+        control: "Scoped IAM Policies",
+        expected: "All service roles follow least-privilege IAM policies scoped to specific resources",
+        actual: "AI_SERVICE_ROLE uses broad IAM permissions — not scoped to specific Snowflake schemas or Azure resources",
+        severity: "red",
+        remediation: "Audit and scope down all IAM policies to minimum required permissions. Apply resource-level conditions. Implement IAM policy drift detection with automated alerts.",
+      },
+      {
+        control: "Secret Rotation",
+        expected: "All API keys, service credentials, and connection strings rotated on schedule with no hardcoded secrets",
+        actual: "Snowflake service account credentials have not been rotated in 6 months. Azure OpenAI API key stored in environment variable without rotation policy.",
+        severity: "red",
+        remediation: "Move all secrets to a managed vault (Azure Key Vault). Implement automated rotation on a 90-day cycle. Ensure API keys are used only for rate limiting, not authentication.",
       },
     ],
   },
@@ -93,7 +114,7 @@ export const LAYERS = [
     label: "Vector Database",
     subtitle: "Retrieval Layer",
     icon: "◎",
-    summary: "Document retrieval has no access scoping. PII detected in indexed HR documents.",
+    summary: "Document retrieval has no access scoping. PII detected in indexed HR documents. No output validation before downstream systems.",
     findings: [
       {
         control: "Access Tag Coverage",
@@ -123,6 +144,13 @@ export const LAYERS = [
         severity: "red",
         remediation: "Remove PII-containing documents from index immediately. Implement PII scanning in the indexing pipeline. Re-index after remediation.",
       },
+      {
+        control: "Output Validation Gate",
+        expected: "All AI-generated content validated and filtered before flowing into downstream systems (reports, databases, APIs)",
+        actual: "AI responses can be exported directly to internal dashboards and Slack channels without validation",
+        severity: "red",
+        remediation: "Implement an output validation gate between the AI system and any downstream consumers. Apply content classification, PII scanning, and confidence threshold checks before any AI output is written to another system or shared externally.",
+      },
     ],
   },
   {
@@ -130,7 +158,7 @@ export const LAYERS = [
     label: "LLM / Model Layer",
     subtitle: "Azure OpenAI",
     icon: "◉",
-    summary: "No guardrails, no evaluation pipeline, and prompts may be used for provider abuse monitoring.",
+    summary: "No guardrails, no evaluation pipeline, no kill switch, no model legal approval, no security testing, and prompts may be used for provider abuse monitoring.",
     findings: [
       {
         control: "System Prompt Guardrails",
@@ -140,11 +168,18 @@ export const LAYERS = [
         remediation: "Enhance system prompt with explicit behavioral constraints: scope limitations, refusal patterns for out-of-scope queries, and output formatting requirements.",
       },
       {
-        control: "Prompt Injection Defenses",
-        expected: "Input sanitization and prompt injection detection active",
-        actual: "No prompt injection defenses implemented",
+        control: "Direct Prompt Injection Defenses",
+        expected: "Input sanitization, regex filtering, and prompt attack detection active for user-submitted queries (e.g. 'ignore previous instructions', system prompt extraction attempts)",
+        actual: "No prompt injection defenses implemented — no input sanitization, no WAF rules, no attack classifier",
         severity: "red",
-        remediation: "Implement input sanitization layer. Add prompt injection detection using pattern matching and a secondary classifier. Log all blocked attempts.",
+        remediation: "Implement a multi-layer defense: (1) WAF with regex filters for known injection patterns (use safe regexes — verify against ReDoS). (2) Prompt attack detection classifier as a pre-processing step. (3) Input sanitization restricting to safe character sets where feasible. Log all blocked attempts.",
+      },
+      {
+        control: "Indirect Prompt Injection Defenses",
+        expected: "RAG documents and external inputs scanned for embedded instructions before inclusion in model context",
+        actual: "No scanning of retrieved documents for embedded prompt injection payloads",
+        severity: "red",
+        remediation: "Implement content scanning on all RAG-sourced inputs before they enter the model context window. Flag documents containing instruction-like patterns. Quarantine and review flagged content before re-indexing.",
       },
       {
         control: "Confidence Scoring",
@@ -181,6 +216,27 @@ export const LAYERS = [
         severity: "yellow",
         remediation: "Upgrade to Enterprise Agreement with abuse monitoring opt-out. Review Azure data processing addendum with legal team.",
       },
+      {
+        control: "Andon Cord — AI Kill Switch",
+        expected: "Mechanism to disable all GenAI functionality independently of the model provider, with a generic error message to users",
+        actual: "No kill switch exists — disabling AI requires a full application deployment or Azure service suspension",
+        severity: "red",
+        remediation: "Implement an application-level feature flag that immediately disables all GenAI functionality without depending on Azure. Display a standardized fallback message: 'AI features are temporarily unavailable. Please contact support.' Test the kill switch quarterly.",
+      },
+      {
+        control: "Pre-Trained Model Legal Approval",
+        expected: "All foundation models in use have documented legal approval covering IP, licensing, and data processing terms",
+        actual: "No legal review on file for GPT-4o usage — deployment proceeded without formal model approval",
+        severity: "red",
+        remediation: "Submit legal review request for GPT-4o covering: licensing terms, IP ownership of outputs, data processing agreement, and approved use cases. Block new model deployments until legal sign-off is obtained.",
+      },
+      {
+        control: "Security Testing Pipeline",
+        expected: "Automated adversarial security tests (prompt injection, data exfiltration, jailbreak) running in CI/CD pipeline",
+        actual: "No security-specific tests in pipeline — only functional tests exist",
+        severity: "red",
+        remediation: "Integrate adversarial prompt testing into the CI/CD pipeline. Include test suites for: prompt injection (direct and indirect), data exfiltration attempts, jailbreak patterns, and system prompt extraction. Run on every deployment.",
+      },
     ],
   },
   {
@@ -188,7 +244,7 @@ export const LAYERS = [
     label: "Application Layer",
     subtitle: "User-Facing Controls",
     icon: "◇",
-    summary: "Strong authentication in place, but no audit logging, human review, or AI disclosure to employees.",
+    summary: "Strong authentication in place, but no audit logging, human review, AI disclosure, disclaimer, security headers, rate limiting, or session isolation.",
     findings: [
       {
         control: "Authentication",
@@ -231,6 +287,34 @@ export const LAYERS = [
         actual: "No AI usage policy communicated to employees",
         severity: "red",
         remediation: "Draft and distribute AI Transparency & Usage Policy. Require employee acknowledgment. Include: what is logged, who can access logs, employee rights.",
+      },
+      {
+        control: "Gen AI Disclaimer Banner",
+        expected: "Persistent in-app disclaimer stating: approved data classification level, prohibition on customer data input, notice that outputs require independent verification, and notice that prompts may be used to improve the system",
+        actual: "No disclaimer or data classification guidance displayed to users",
+        severity: "red",
+        remediation: "Add a persistent disclaimer banner visible on every AI interaction screen. Include: approved data classification (Internal only — no customer data), verification requirement for all AI outputs, prompt usage notice, and link to full AI usage policy.",
+      },
+      {
+        control: "Security Headers (CSP / XSS)",
+        expected: "Content Security Policy, X-Frame-Options, X-Content-Type-Options, and Strict-Transport-Security headers configured to mitigate XSS, clickjacking, and data injection attacks",
+        actual: "No security headers configured — default server headers only",
+        severity: "red",
+        remediation: "Configure CSP header with strict source directives. Add X-Frame-Options: DENY, X-Content-Type-Options: nosniff, and HSTS with min 1-year max-age. Validate headers with a security scanner.",
+      },
+      {
+        control: "DDoS / Rate Limiting",
+        expected: "Rate limiting enforced per user and per IP on all AI query endpoints to prevent abuse and resource exhaustion",
+        actual: "No rate limiting on AI query endpoints — users can submit unlimited requests",
+        severity: "red",
+        remediation: "Implement rate limiting at the API gateway level: per-user (e.g. 30 queries/min) and per-IP. Add progressive backoff for repeated limit hits. Configure WAF rules for volumetric attack patterns. Use API keys for throttling only, not authentication.",
+      },
+      {
+        control: "User Session Isolation",
+        expected: "Each user session is fully isolated — no cross-session context leakage between users",
+        actual: "Session isolation not formally verified — shared AI_SERVICE_ROLE creates risk of context bleed",
+        severity: "yellow",
+        remediation: "Implement strict session isolation at the application layer. Ensure conversation context, retrieved documents, and model state are scoped to individual authenticated sessions. Audit for cross-session leakage.",
       },
     ],
   },
