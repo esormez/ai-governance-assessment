@@ -10,15 +10,21 @@ const CATEGORIES = [
       { id: "d2", text: "Is user identity propagated from the application layer through to the data warehouse on every query?" },
       { id: "d3", text: "Are data quality validation checks enforced at ingestion before records enter the warehouse?" },
       { id: "d4", text: "Are existing enterprise data governance policies integrated with AI system access controls?" },
+      { id: "d5", text: "Are third-party AI vendors contractually restricted from using organizational data for model training without explicit written consent?" },
+      { id: "d6", text: "Is there a documented data classification policy that defines which data categories are permitted for AI system use?" },
+      { id: "d7", text: "Are data retention and deletion policies specifically defined for AI training data, prompt logs, and model artifacts?" },
     ],
   },
   {
-    id: "semantic", label: "Semantic Layer", icon: "◈",
+    id: "semantic", label: "Semantic Layer & Transparency", icon: "◈",
     questions: [
       { id: "s1", text: "Are business metric definitions version-controlled with a formal promotion and approval process?" },
       { id: "s2", text: "Is there a designated owner for each business metric definition in the semantic layer?" },
       { id: "s3", text: "Is there automated conflict detection to prevent divergent KPI definitions across teams?" },
       { id: "s4", text: "Are certified metrics clearly distinguished from experimental or draft definitions?" },
+      { id: "s5", text: "Is there a documented explainability standard that describes how AI-informed decisions can be traced and understood by stakeholders?" },
+      { id: "s6", text: "Are AI system outputs that inform business decisions traceable to their underlying data sources and model logic?" },
+      { id: "s7", text: "Is there a formal process for mapping regulatory requirements (EU AI Act, GDPR, CCPA) to specific AI system controls and documentation?" },
     ],
   },
   {
@@ -28,6 +34,10 @@ const CATEGORIES = [
       { id: "m2", text: "Does the system enforce citation requirements and confidence scoring on every AI-generated response?" },
       { id: "m3", text: "Are behavioral guardrails and prompt injection defenses active in the system prompt?" },
       { id: "m4", text: "Is there a human-in-the-loop review gate for high-risk query types (financial, compliance, regulatory)?" },
+      { id: "m5", text: "Is there a bias and fairness testing framework that evaluates AI outputs for discrimination across protected characteristics (race, gender, age, disability)?" },
+      { id: "m6", text: "Are there explicitly documented AI use cases that are prohibited, with technical controls to enforce those prohibitions?" },
+      { id: "m7", text: "Does a third-party/vendor AI risk review process exist before procuring or integrating external AI capabilities?" },
+      { id: "m8", text: "Is there a model drift detection mechanism that identifies when AI behavior or performance changes without code updates?" },
     ],
   },
   {
@@ -37,6 +47,9 @@ const CATEGORIES = [
       { id: "o2", text: "Are guardrail trigger events, confidence score degradation, and auth violations surfaced in a governance dashboard?" },
       { id: "o3", text: "Is there a user feedback mechanism (e.g. thumbs up/down) that feeds into a regular model review process?" },
       { id: "o4", text: "Are audit logs stored in an immutable store queryable by compliance and security teams?" },
+      { id: "o5", text: "Are regulatory and compliance documentation artifacts (audit trails, risk assessments, impact analyses) generated and maintained as part of the AI system lifecycle?" },
+      { id: "o6", text: "Is there a transparency disclosure mechanism that informs end users when they are interacting with AI-generated content?" },
+      { id: "o7", text: "Are AI system performance baselines established with automated alerting when outputs degrade beyond defined thresholds?" },
     ],
   },
   {
@@ -46,6 +59,10 @@ const CATEGORIES = [
       { id: "op2", text: "Does a formal AI use case intake process exist — requiring approval before any new AI system or feature is built?" },
       { id: "op3", text: "Is there a documented incident response playbook with defined severity tiers and escalation SLAs?" },
       { id: "op4", text: "Is there a regular governance review cadence (monthly or quarterly) with defined metrics and accountable owners?" },
+      { id: "op5", text: "Is there a role-based AI literacy and responsible use training program with defined completion requirements for all employees?" },
+      { id: "op6", text: "Do clear channels exist for employees to raise AI-related concerns (bias, safety, misuse) without adverse consequences?" },
+      { id: "op7", text: "Is there a defined AI decision authority matrix (RACI) that assigns accountability for AI outcomes at every organizational level?" },
+      { id: "op8", text: "Is there a formal process for evaluating and approving AI vendor relationships, including ongoing monitoring and contractual governance obligations?" },
     ],
   },
 ];
@@ -54,11 +71,11 @@ const SCORE_LABELS = ["Not in place", "Partially in place", "Fully in place"];
 const SCORE_COLORS = [BRAND.danger, BRAND.warn, BRAND.accent];
 
 const RECS = {
-  data: "Implement row-level security via identity-aware query policies. Enforce data quality validation at ingestion. Integrate with existing IAM/AD roles before production deployment.",
-  semantic: "Establish version control for metric definitions with a formal promotion gate. Designate metric owners. Run a conflict detection scan across existing semantic layer definitions.",
-  model: "Deploy an evaluation pipeline that runs automated checks on every model update. Enforce confidence scoring and citation requirements in the system prompt. Stand up a human review queue for high-risk query types.",
-  observability: "Implement a structured audit log schema capturing user ID, query hash, retrieved chunks, and response hash on every query. Route guardrail trigger events to a governance dashboard with alerting thresholds.",
-  operations: "Designate an AI Governance Owner at VP level or above. Launch a use case intake form — no AI build proceeds without a signed approval. Publish an incident response playbook with P1/P2/P3 severity tiers before go-live.",
+  data: "Implement row-level security via identity-aware query policies. Enforce data quality validation at ingestion. Integrate with existing IAM/AD roles before production deployment. Establish contractual restrictions on vendor data training and define data classification policies for AI use. Implement retention and deletion policies for prompt logs and model artifacts.",
+  semantic: "Establish version control for metric definitions with a formal promotion gate. Designate metric owners. Run a conflict detection scan across existing semantic layer definitions. Document explainability standards for AI-informed decisions. Map regulatory requirements (EU AI Act, GDPR, CCPA) to specific AI system controls and maintain traceability from outputs to data sources.",
+  model: "Deploy an evaluation pipeline that runs automated checks on every model update. Enforce confidence scoring and citation requirements in the system prompt. Stand up a human review queue for high-risk query types. Implement bias and fairness testing across protected characteristics. Document explicit AI prohibitions with technical enforcement. Establish vendor AI risk review and model drift detection processes.",
+  observability: "Implement a structured audit log schema capturing user ID, query hash, retrieved chunks, and response hash on every query. Route guardrail trigger events to a governance dashboard with alerting thresholds. Generate and maintain regulatory compliance artifacts across the AI lifecycle. Deploy transparency disclosures for AI-generated content and establish performance baselines with automated degradation alerts.",
+  operations: "Designate an AI Governance Owner at VP level or above. Launch a use case intake form — no AI build proceeds without a signed approval. Publish an incident response playbook with P1/P2/P3 severity tiers before go-live. Implement role-based AI literacy training with completion requirements. Establish speak-up channels for AI concerns, define a RACI matrix for AI decision authority, and formalize vendor governance with ongoing monitoring obligations.",
 };
 
 function getMaturityLabel(pct) {
@@ -130,8 +147,8 @@ export default function Assessment() {
         AI Governance<br /><span style={{ color: BRAND.accent }}>Readiness Assessment</span>
       </h1>
       <p style={{ fontSize: 15, color: BRAND.light, lineHeight: 1.7, maxWidth: 520, margin: "0 0 40px" }}>
-        20 questions across five governance domains. Understand your current posture,
-        identify critical gaps, and get a prioritized action plan — in under 10 minutes.
+        37 questions across five governance domains. Understand your current posture,
+        identify critical gaps, and get a prioritized action plan — in under 15 minutes.
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
         {CATEGORIES.map((c) => (

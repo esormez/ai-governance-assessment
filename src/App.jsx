@@ -2,6 +2,8 @@ import { useState } from "react";
 import { BRAND } from "./brand";
 import NavToggle from "./components/NavToggle";
 import Assessment from "./components/assessment/Assessment";
+import IntakeForm from "./components/intake/IntakeForm";
+import Registry from "./components/registry/Registry";
 import Audit from "./components/audit/Audit";
 import Dashboard from "./components/dashboard/Dashboard";
 import PolicyGenerator from "./components/placeholder/PolicyGenerator";
@@ -23,6 +25,8 @@ export default function App() {
       <NavToggle activeMode={mode} onModeChange={setMode} />
       <div style={{ paddingTop: 52 }}>
         {mode === "assessment" && <Assessment />}
+        {mode === "intake" && <IntakeForm />}
+        {mode === "registry" && <Registry />}
         {mode === "audit" && <Audit />}
         {mode === "dashboard" && <Dashboard />}
         {mode === "policy" && <PolicyGenerator />}

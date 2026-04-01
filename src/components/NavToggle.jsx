@@ -2,6 +2,8 @@ import { BRAND } from "../brand";
 
 const MODES = [
   { id: "assessment", label: "Pre-Sales Assessment" },
+  { id: "intake", label: "Use Case Intake" },
+  { id: "registry", label: "AI Registry" },
   { id: "audit", label: "Engaged Audit" },
   { id: "dashboard", label: "Monitoring Dashboard" },
   { id: "policy", label: "Policy Generator" },

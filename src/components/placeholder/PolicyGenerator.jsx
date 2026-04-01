@@ -231,6 +231,107 @@ function deriveModelGovernance() {
   };
 }
 
+function deriveFairnessPolicy() {
+  const modelLayer = LAYERS.find((l) => l.id === "model");
+  const biasFinding = modelLayer.findings.find((f) => f.control === "Bias & Fairness Testing Framework");
+  const prohibitedFinding = modelLayer.findings.find((f) => f.control === "Prohibited Use Case Enforcement");
+
+  const allGreen = [biasFinding, prohibitedFinding].every((f) => f?.severity === "green");
+  const hasRed = [biasFinding, prohibitedFinding].some((f) => f?.severity === "red");
+
+  return {
+    title: "11. Fairness, Bias & Prohibited Uses",
+    status: allGreen ? "green" : hasRed ? "red" : "yellow",
+    clauses: [
+      `${CLIENT.name} is committed to ensuring its AI systems do not discriminate unlawfully or produce unjust outcomes based on protected characteristics including race, gender, age, disability, religion, sexual orientation, or national origin.`,
+      `BIAS TESTING: ${biasFinding?.actual || "Not assessed"}. All AI systems must undergo bias and fairness evaluation before production deployment. Fairness metrics (demographic parity, equalized odds) must be defined per use case with Legal and Compliance sign-off. Deployment is blocked if thresholds are exceeded.`,
+      `PROHIBITED USES: ${prohibitedFinding?.actual || "Not assessed"}. The following AI applications are explicitly prohibited and must be blocked at the intake and deployment gates:`,
+      "- Emotional monitoring or inference of employee emotional state in the workplace",
+      "- Social scoring or behavioral ranking of individuals",
+      "- Subliminal or deceptive manipulation of individual behavior",
+      "- Real-time biometric identification in publicly accessible spaces without explicit consent",
+      "- AI systems that exploit vulnerabilities of specific groups (age, disability, economic situation)",
+      "No business justification, commercial opportunity, or industry precedent overrides these prohibitions.",
+      biasFinding?.severity !== "green"
+        ? `Current gap: ${biasFinding?.actual}. A bias and fairness testing framework must be implemented before production deployment.`
+        : "Current state: Bias and fairness testing framework is operational.",
+    ],
+  };
+}
+
+function deriveVendorGovernancePolicy() {
+  const appLayer = LAYERS.find((l) => l.id === "app");
+  const vendorGovFinding = appLayer.findings.find((f) => f.control === "Vendor Governance & Monitoring");
+  const dataLayer = LAYERS.find((l) => l.id === "data");
+  const trainingFinding = dataLayer.findings.find((f) => f.control === "Vendor Data Training Restrictions");
+  const modelLayer = LAYERS.find((l) => l.id === "model");
+  const vendorReviewFinding = modelLayer.findings.find((f) => f.control === "Third-Party Vendor AI Risk Review");
+
+  const allGreen = [vendorGovFinding, trainingFinding, vendorReviewFinding].every((f) => f?.severity === "green");
+  const hasRed = [vendorGovFinding, trainingFinding, vendorReviewFinding].some((f) => f?.severity === "red");
+
+  return {
+    title: "12. Third-Party & Vendor AI Governance",
+    status: allGreen ? "green" : hasRed ? "red" : "yellow",
+    clauses: [
+      `When AI capabilities operate under ${CLIENT.name}'s name or affect its customers, accountability remains with ${CLIENT.name} regardless of the vendor source.`,
+      `VENDOR ASSESSMENT: ${vendorReviewFinding?.actual || "Not assessed"}. Before procuring, integrating, or renewing any AI-powered product, a Third-Party AI Vendor Assessment must evaluate: governance framework, risk classification, data handling practices, explainability, incident response obligations, and contractual protections.`,
+      `DATA TRAINING RESTRICTIONS: ${trainingFinding?.actual || "Not assessed"}. All contracts with AI vendors must restrict the vendor from using organizational or customer data to train their models without explicit written consent.`,
+      "REQUIRED CONTRACT CLAUSES: All AI vendor contracts must include: (a) data training opt-out, (b) prompt incident notification, (c) audit rights over AI compliance, (d) data protection alignment with GDPR/CCPA, (e) EU AI Act compliance where applicable.",
+      `ONGOING MONITORING: ${vendorGovFinding?.actual || "Not assessed"}. Third-party AI relationships must be monitored continuously. High-risk vendors reviewed quarterly, medium-risk annually. New AI features introduced by vendors within existing contracts are subject to the same intake and assessment process as new procurement.`,
+      "VENDOR REGISTRY: All third-party AI systems must be registered in the AI Use Case Registry with designated internal owners, risk tier classification, and review schedules.",
+    ],
+  };
+}
+
+function deriveTrainingCulturePolicy() {
+  const appLayer = LAYERS.find((l) => l.id === "app");
+  const trainingFinding = appLayer.findings.find((f) => f.control === "AI Literacy & Training Program");
+  const concernsFinding = appLayer.findings.find((f) => f.control === "AI Concern Reporting Channels");
+  const raciFinding = appLayer.findings.find((f) => f.control === "AI Decision Authority Matrix (RACI)");
+
+  const allGreen = [trainingFinding, concernsFinding, raciFinding].every((f) => f?.severity === "green");
+  const hasRed = [trainingFinding, concernsFinding, raciFinding].some((f) => f?.severity === "red");
+
+  return {
+    title: "13. Training, Culture & Accountability",
+    status: allGreen ? "green" : hasRed ? "red" : "yellow",
+    clauses: [
+      "Governance documents do not create responsible AI on their own. Culture and capability matter at least as much.",
+      `AI TRAINING: ${trainingFinding?.actual || "Not assessed"}. All employees who interact with AI systems must complete role-based training: (a) General workforce — AI literacy, responsible use, data handling. (b) Technical teams — model evaluation, bias awareness, security. (c) Leadership — governance responsibilities, risk oversight, accountability.`,
+      `SPEAK-UP CULTURE: ${concernsFinding?.actual || "Not assessed"}. Clear channels must exist for employees to raise AI-related concerns (bias, safety, misuse, policy violations). There must be no adverse consequences for raising concerns in good faith. Leaders set the tone — a team that sees its leader question an AI output understands it is safe to do the same.`,
+      `DECISION AUTHORITY: ${raciFinding?.actual || "Not assessed"}. An AI Decision Authority Matrix (RACI) must define who is accountable at every level: use case registration, risk tier escalation, deployment gates, incident response, and ongoing monitoring.`,
+      "AI GOVERNANCE BODY: An AI Governance Body with enterprise-level oversight must be established. Responsibilities include: maintaining the AI Constitution, approving high-risk AI deployments, receiving incident reports, monitoring the AI risk landscape, and reporting to senior leadership.",
+      trainingFinding?.severity !== "green"
+        ? `Current gap: ${trainingFinding?.actual}. Training and accountability infrastructure must be established before AI adoption scales further.`
+        : "Current state: AI training and accountability framework is operational.",
+    ],
+  };
+}
+
+function deriveTransparencyPolicy() {
+  const appLayer = LAYERS.find((l) => l.id === "app");
+  const transparencyFinding = appLayer.findings.find((f) => f.control === "AI Transparency Disclosure");
+  const modelLayer = LAYERS.find((l) => l.id === "model");
+  const driftFinding = modelLayer.findings.find((f) => f.control === "Model Drift Detection");
+
+  const allGreen = [transparencyFinding, driftFinding].every((f) => f?.severity === "green");
+  const hasRed = [transparencyFinding, driftFinding].some((f) => f?.severity === "red");
+
+  return {
+    title: "14. Transparency & Explainability",
+    status: allGreen ? "green" : hasRed ? "red" : "yellow",
+    clauses: [
+      "Transparency means being open about what AI is in use, how it works, what it can and cannot do, and how decisions informed by AI are made. Transparency is a precondition for trust.",
+      `AI DISCLOSURE: ${transparencyFinding?.actual || "Not assessed"}. End users must be clearly informed when they are interacting with AI-generated content. All AI interaction screens must display a persistent transparency indicator. AI-generated outputs must be distinguishable from human-authored content.`,
+      "EXPLAINABILITY: AI systems whose outputs inform material business decisions must provide documentation of: (a) what data informed the output, (b) the model or logic used, (c) confidence level, and (d) known limitations. The obligation to explain is proportional to the impact of the decision.",
+      `DRIFT MONITORING: ${driftFinding?.actual || "Not assessed"}. AI behavior can change or degrade without code changes. Performance baselines must be established for all production AI systems with automated alerting when outputs degrade beyond defined thresholds.`,
+      "SHADOW AI PREVENTION: The obligation to log and register AI use is a core accountability measure. It prevents Shadow AI from taking root. It is not punitive — it is how the organization learns what AI is in use and can support people using it responsibly.",
+      "REGULATORY DOCUMENTATION: Compliance artifacts (audit trails, risk assessments, impact analyses) must be generated and maintained as part of the AI system lifecycle, not created retroactively when regulators ask.",
+    ],
+  };
+}
+
 const SECTIONS = [
   deriveLoggingPolicy,
   deriveAccessPolicy,
@@ -242,6 +343,10 @@ const SECTIONS = [
   deriveSecurityControls,
   deriveDisclaimerPolicy,
   deriveModelGovernance,
+  deriveFairnessPolicy,
+  deriveVendorGovernancePolicy,
+  deriveTrainingCulturePolicy,
+  deriveTransparencyPolicy,
 ];
 
 const severityColor = (s) => s === "red" ? BRAND.danger : s === "yellow" ? BRAND.warn : BRAND.accent;
